@@ -1,0 +1,186 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net - Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'htetmyanmar321bb@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation Blueprint for User profiles
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'joinedAt']) &&
+             data.keys().size() <= 7 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.joinedAt is string && data.joinedAt.size() <= 50;
+    }
+
+    // Validation Blueprint for Comments
+    function isValidComment(data) {
+      return data.keys().hasAll(['id', 'userId', 'userName', 'targetId', 'targetType', 'content', 'createdAt']) &&
+             data.keys().size() <= 9 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.userName is string && data.userName.size() <= 100 &&
+             data.targetId is string && data.targetId.size() <= 128 &&
+             data.targetType is string && (data.targetType == 'article' || data.targetType == 'post' || data.targetType == 'book') &&
+             data.content is string && data.content.size() <= 2000 &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Validation Blueprint for Reactions
+    function isValidReaction(data) {
+      return data.keys().hasAll(['id', 'userId', 'targetId', 'targetType', 'type', 'createdAt']) &&
+             data.keys().size() <= 8 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.targetId is string && data.targetId.size() <= 128 &&
+             data.targetType is string && (data.targetType == 'article' || data.targetType == 'post' || data.targetType == 'book') &&
+             data.type is string && (data.type == 'like' || data.type == 'love' || data.type == 'brain' || data.type == 'clap') &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Validation Blueprint for ContactMessages
+    function isValidContact(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'subject', 'message', 'createdAt', 'status']) &&
+             data.keys().size() == 7 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.subject is string && data.subject.size() <= 200 &&
+             data.message is string && data.message.size() <= 5000 &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             data.status is string && (data.status == 'unread' || data.status == 'read' || data.status == 'replied');
+    }
+
+    // Validation Blueprint for Subscribers
+    function isValidSubscriber(data) {
+      return data.keys().hasAll(['id', 'email', 'subscribedAt']) &&
+             data.keys().size() == 3 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.subscribedAt is string && data.subscribedAt.size() <= 50;
+    }
+
+
+    // 1. Categories collection
+    match /categories/{catId} {
+      allow read: if true;
+      allow write, update, delete: if isAdmin();
+    }
+
+    // 2. Tags collection
+    match /tags/{tagId} {
+      allow read: if true;
+      allow write, update, delete: if isAdmin();
+    }
+
+    // 3. Articles collection
+    match /articles/{artId} {
+      allow read: if true;
+      allow write, update, delete: if isAdmin();
+    }
+
+    // 4. Posts collection
+    match /posts/{postId} {
+      allow read: if true;
+      // Allow general users to update likes count only
+      allow update: if (
+        isAdmin() || 
+        (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']))
+      );
+      allow create, delete: if isAdmin();
+    }
+
+    // 5. Books collection
+    match /books/{bookId} {
+      allow read: if true;
+      allow write, update, delete: if isAdmin();
+    }
+
+    // 6. Users (Readers & Followers) collection
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if (
+        isAdmin() || 
+        (isOwner(userId) && 
+         isValidUser(request.resource.data) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isFollowing', 'followedAt']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 7. Comments collection
+    match /comments/{commentId} {
+      allow read, list: if true;
+      allow create: if isVerifiedUser() && 
+                      request.resource.data.userId == request.auth.uid && 
+                      isValidComment(request.resource.data);
+      allow update: if (
+        isAdmin() || 
+        (isVerifiedUser() && 
+         resource.data.userId == request.auth.uid && 
+         request.resource.data.userId == request.auth.uid && 
+         isValidComment(request.resource.data) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content']))
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // 8. Reactions collection
+    match /reactions/{reactionId} {
+      allow read, list: if true;
+      allow create: if isVerifiedUser() && 
+                      request.resource.data.userId == request.auth.uid && 
+                      isValidReaction(request.resource.data);
+      allow update: if (
+        isAdmin() || 
+        (isVerifiedUser() && 
+         resource.data.userId == request.auth.uid && 
+         request.resource.data.userId == request.auth.uid && 
+         isValidReaction(request.resource.data) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['type']))
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // 9. Contacts collection (Contact submissions)
+    match /contacts/{msgId} {
+      allow read, list: if isAdmin();
+      allow create: if isValidContact(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    // 10. Subscribers collection (Newsletter signups)
+    match /subscribers/{subId} {
+      allow read, list: if isAdmin();
+      allow create: if isValidSubscriber(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+  }
+}

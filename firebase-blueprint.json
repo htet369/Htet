@@ -1,0 +1,203 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "A taxonomic category for articles and books.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["id", "name", "slug", "color"]
+    },
+    "Tag": {
+      "title": "Tag",
+      "description": "A tag used to describe articles and posts.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" }
+      },
+      "required": ["id", "name", "slug"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "A long-form research paper, essay, or tutorial written by Htet.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "summary": { "type": "string" },
+        "content": { "type": "string" },
+        "coverImage": { "type": "string" },
+        "category": { "type": "string" },
+        "tags": { "type": "array" },
+        "status": { "type": "string" },
+        "publishDate": { "type": "string" },
+        "views": { "type": "number" },
+        "readingTime": { "type": "number" },
+        "isFeatured": { "type": "boolean" },
+        "metaTitle": { "type": "string" },
+        "metaDescription": { "type": "string" }
+      },
+      "required": ["id", "title", "slug", "summary", "content", "category", "status", "publishDate"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "A short micro-post or insight stream written by Htet.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "content": { "type": "string" },
+        "publishDate": { "type": "string" },
+        "status": { "type": "string" },
+        "views": { "type": "number" },
+        "likes": { "type": "number" },
+        "tags": { "type": "array" }
+      },
+      "required": ["id", "content", "publishDate", "status", "views", "likes"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "An educational book or curated series written by Htet.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "coverImage": { "type": "string" },
+        "status": { "type": "string" },
+        "publishDate": { "type": "string" },
+        "views": { "type": "number" },
+        "series": { "type": "string" },
+        "pdfUrl": { "type": "string" },
+        "epubUrl": { "type": "string" },
+        "chapters": { "type": "array" }
+      },
+      "required": ["id", "title", "slug", "summary", "description", "status", "publishDate"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A registered reader of the personal publishing platform.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "joinedAt": { "type": "string" },
+        "isFollowing": { "type": "boolean" },
+        "followedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "joinedAt"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A user-submitted comment on an article, short post, or book.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "targetId": { "type": "string" },
+        "targetType": { "type": "string", "enum": ["article", "post", "book"] },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "userName", "targetId", "targetType", "content", "createdAt"]
+    },
+    "Reaction": {
+      "title": "Reaction",
+      "description": "A user reaction (like, love, brain, clap) on an article, post, or book.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "targetId": { "type": "string" },
+        "targetType": { "type": "string", "enum": ["article", "post", "book"] },
+        "type": { "type": "string", "enum": ["like", "love", "brain", "clap"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "targetId", "targetType", "type", "createdAt"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "A contact submission message sent to the author.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "status": { "type": "string", "enum": ["unread", "read", "replied"] }
+      },
+      "required": ["id", "name", "email", "subject", "message", "createdAt", "status"]
+    },
+    "Subscriber": {
+      "title": "Subscriber",
+      "description": "A newsletter subscriber email address.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "subscribedAt": { "type": "string" }
+      },
+      "required": ["id", "email", "subscribedAt"]
+    }
+  },
+  "firestore": {
+    "categories": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Writing categories available on the platform."
+    },
+    "tags": {
+      "schema": { "$ref": "#/entities/Tag" },
+      "description": "Taxonomy tags for topics."
+    },
+    "articles": {
+      "schema": { "$ref": "#/entities/Article" },
+      "description": "Long-form articles and academic essays."
+    },
+    "posts": {
+      "schema": { "$ref": "#/entities/Post" },
+      "description": "Spontaneous short thoughts stream."
+    },
+    "books": {
+      "schema": { "$ref": "#/entities/Book" },
+      "description": "Published books and learning series."
+    },
+    "users": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Registered readers and followers."
+    },
+    "comments": {
+      "schema": { "$ref": "#/entities/Comment" },
+      "description": "Reader comments on posts and articles."
+    },
+    "reactions": {
+      "schema": { "$ref": "#/entities/Reaction" },
+      "description": "Reader reactions to posts and articles."
+    },
+    "contacts": {
+      "schema": { "$ref": "#/entities/ContactMessage" },
+      "description": "Direct inquiries from readers."
+    },
+    "subscribers": {
+      "schema": { "$ref": "#/entities/Subscriber" },
+      "description": "Newsletter subscription records."
+    }
+  }
+}

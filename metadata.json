@@ -1,0 +1,6 @@
+{
+  "name": "ထက် - Personal Publishing Platform",
+  "description": "A modern, elegant, and responsive personal publishing platform for the independent writer ထက်, featuring posts, articles, books, and a secure admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
